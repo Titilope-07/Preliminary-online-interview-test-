@@ -1,0 +1,52 @@
+<?php
+// Step 1: Connect to the database
+$host = 'localhost';
+$dbname = 'your_database_name';
+$username = 'your_username';
+$password = 'your_password';
+
+try {
+  $db = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+  $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+  echo "Connection failed: " . $e->getMessage();
+}
+
+// Step 3: Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // Step 4: Retrieve inputted data
+  $pollingUnitId = $_POST['polling_unit_id'];
+  $pdp = $_POST['pdp'];
+  $dpp = $_POST['dpp'];
+  $acn = $_POST['acn'];
+  $ppa = $_POST['ppa'];
+  $cdc = $_POST['cdc'];
+  $jp = $_POST['jp'];
+
+  // Step 5: Insert new polling unit results into the database
+  $query = "INSERT INTO announced_pu_results (polling_unit_uniqueid, pdp, dpp, acn, ppa, cdc, jp) VALUES (:pollingUnitId, :pdp, :dpp, :acn, :ppa, :cdc, :jp)";
+  $stmt = $db->prepare($query);
+  $stmt->bindParam(':pollingUnitId', $pollingUnitId);
+  $stmt->bindParam(':pdp', $pdp);
+  $stmt->bindParam(':dpp', $dpp);
+  $stmt->bindParam(':acn', $acn);
+  $stmt->bindParam(':ppa', $ppa);
+  $stmt->bindParam(':cdc', $cdc);
+  $stmt->bindParam(':jp', $jp);
+  $stmt->execute();
+
+  // Step 6: Display success message or redirect user
+  echo "Polling unit results stored successfully!";
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Store Polling Unit Results</title>
+</head>
+<body>
+  <h1>Store Polling Unit Results</h1>
+
+  <form method="post">
+    <label for="polling_unit_id">Polling Unit ID
