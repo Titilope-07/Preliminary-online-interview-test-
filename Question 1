@@ -1,0 +1,50 @@
+<?php
+// Step 1: Connect to the database
+$host = 'localhost';
+$dbname = 'your_database_name';
+$username = 'your_username';
+$password = 'your_password';
+
+try {
+  $db = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+  $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+  echo "Connection failed: " . $e->getMessage();
+}
+
+// Step 2: Get the polling unit ID from the URL parameter
+$pollingUnitId = $_GET['polling_unit_id'];
+
+// Step 3: Retrieve the polling unit information from the database
+$query = "SELECT * FROM polling_unit WHERE uniqueid = :pollingUnitId AND state_id = 25";
+$stmt = $db->prepare($query);
+$stmt->bindParam(':pollingUnitId', $pollingUnitId);
+$stmt->execute();
+
+$pollingUnit = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Step 4: Display the polling unit result on a web page
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Polling Unit Result</title>
+</head>
+<body>
+  <h1>Polling Unit Result</h1>
+
+  <?php if ($pollingUnit): ?>
+    <h2>Polling Unit Details</h2>
+    <p>Polling Unit Name: <?php echo $pollingUnit['polling_unit_name']; ?></p>
+    <p>Ward ID: <?php echo $pollingUnit['ward_id']; ?></p>
+    <p>LGA ID: <?php echo $pollingUnit['lga_id']; ?></p>
+    <p>State ID: <?php echo $pollingUnit['state_id']; ?></p>
+
+    <!-- Additional information or formatting as needed -->
+
+  <?php else: ?>
+    <p>No polling unit found with the provided ID.</p>
+  <?php endif; ?>
+</body>
+</html>
