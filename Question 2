@@ -1,0 +1,64 @@
+<?php
+// Step 1: Connect to the database
+$host = 'localhost';
+$dbname = 'your_database_name';
+$username = 'your_username';
+$password = 'your_password';
+
+try {
+  $db = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+  $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+  echo "Connection failed: " . $e->getMessage();
+}
+
+// Step 2: Retrieve the list of local governments from the "LGA" table
+$query = "SELECT * FROM LGA";
+$stmt = $db->prepare($query);
+$stmt->execute();
+$lgas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Step 4: Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $selectedLgaId = $_POST['lga_id'];
+
+  // Step 5: Query the database to calculate the summed total results
+  $query = "SELECT SUM(pdp) AS pdp_total, SUM(dpp) AS dpp_total, SUM(acn) AS acn_total, SUM(ppa) AS ppa_total, SUM(cdc) AS cdc_total, SUM(jp) AS jp_total FROM announced_pu_results WHERE lga_id = :selectedLgaId";
+  $stmt = $db->prepare($query);
+  $stmt->bindParam(':selectedLgaId', $selectedLgaId);
+  $stmt->execute();
+  $totals = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Step 6: Display the summed total results on the web page
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Polling Unit Totals</title>
+</head>
+<body>
+  <h1>Polling Unit Totals</h1>
+
+  <form method="post">
+    <label for="lga">Select Local Government:</label>
+    <select name="lga_id" id="lga">
+      <?php foreach ($lgas as $lga): ?>
+        <option value="<?php echo $lga['lga_id']; ?>"><?php echo $lga['lga_name']; ?></option>
+      <?php endforeach; ?>
+    </select>
+    <button type="submit">Get Totals</button>
+  </form>
+
+  <?php if ($_SERVER['REQUEST_METHOD'] === 'POST' && $totals): ?>
+    <h2>Totals for Selected Local Government</h2>
+    <p>PDP: <?php echo $totals['pdp_total']; ?></p>
+    <p>DPP: <?php echo $totals['dpp_total']; ?></p>
+    <p>ACN: <?php echo $totals['acn_total']; ?></p>
+    <p>PPA: <?php echo $totals['ppa_total']; ?></p>
+    <p>CDC: <?php echo $totals['cdc_total']; ?></p>
+    <p>JP: <?php echo $totals['jp_total']; ?></p>
+  <?php endif; ?>
+</body>
+</html>
